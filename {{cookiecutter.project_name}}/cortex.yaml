@@ -9,44 +9,7 @@ info:
     github:
       repository: {{ cookiecutter['_@cortex_inputs']['git']['repository']['org'] }}/{{ cookiecutter['_@cortex_inputs']['git']['repository']['repoName'] }}
 
-  x-cortex-static-analysis:
-    sonarqube:
-      alias: SonarCloud
-      project: {{ cookiecutter['_@cortex_inputs']['git']['repository']['org'] }}_{{ cookiecutter['_@cortex_inputs']['git']['repository']['repoName'] }}
-
-  {# -------------------- GROUPS -------------------- #}
-  {# Expect a list like ['flex', 'flex-group']; we strip spaces to satisfy alnum/no-space convention #}
-  {% set _groups = cookiecutter['_@cortex_inputs'].get('service_details', {}).get('groups', []) %}
-  {% if _groups and _groups|length > 0 %}
-  x-cortex-groups:
-  {% for g in _groups %}
-    {% if g %}
-    - {{ (g|string) | replace(' ', '') }}
-    {% endif %}
-  {% endfor %}
-  {% endif %}
-
-  {# -------------------- OWNERS -------------------- #}
-  {% set _owners = cookiecutter['_@cortex_inputs'].get('owners', {}) %}
-  {% set _team_owners = _owners.get('teams', []) %}      {# e.g., ['flex-team','flex'] #}
-  {% set _email_owners = _owners.get('emails', []) %}    {# e.g., [{email: 'x@y.com', name: 'x@y.com'}] #}
-  {% if (_team_owners and _team_owners|length > 0) or (_email_owners and _email_owners|length > 0) %}
-  x-cortex-owners:
-    {# Team owners -> type: group (Cortex team) #}
-    {% for t in _team_owners %}
-      {% if t %}
-    - type: group
-      name: {{ t }}
-      provider: CORTEX
-      {% endif %}
-    {% endfor %}
-
-    {# Email owners -> type: email #}
-    {% for e in _email_owners %}
-      {% if e.get('email') %}
-    - type: email
-      email: {{ e['email'] }}
-      {% if e.get('name') %}description: "{{ e['name'] }}"{% endif %}
-      {% endif %}
-    {% endfor %}
-  {% endif %}
+  x-template-preview:
+    groups_raw: {{ cookiecutter.get('entityMetadataGroups', []) }}
+    team_owners_raw: {{ cookiecutter.get('entityMetadataOwnersTeams', []) }}
+    email_owners_raw: {{ cookiecutter.get('entityMetadataOwners', []) }}
