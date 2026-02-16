@@ -1,44 +1,44 @@
 openapi: 3.0.1
 info:
-  title: {{ cookiecutter['_@cortex_inputs']['service_details']['name'] }}
-  description: {{ cookiecutter['_@cortex_inputs']['service_details']['description'] }}
-  x-cortex-tag: {{ cookiecutter['_@cortex_inputs']['service_details']['tag'] }}
+  title: {{ cookiecutter.get('_@cortex_inputs', {}).get('service_details', {}).get('name', 'CHANGE_ME') }}
+  description: "{{ cookiecutter.get('_@cortex_inputs', {}).get('service_details', {}).get('description', '') }}"
+  x-cortex-tag: {{ cookiecutter.get('_@cortex_inputs', {}).get('service_details', {}).get('tag', 'change-me-tag') }}
   x-cortex-type: service
 
   x-cortex-git:
     github:
-      repository: {{ cookiecutter['_@cortex_inputs']['git']['repository']['org'] }}/{{ cookiecutter['_@cortex_inputs']['git']['repository']['repoName'] }}
+      repository: {{ cookiecutter.get('_@cortex_inputs', {}).get('git', {}).get('repository', {}).get('org', 'org') }}/{{ cookiecutter.get('_@cortex_inputs', {}).get('git', {}).get('repository', {}).get('repoName', 'repo') }}
 
-  {# ----------------------- GROUPS ----------------------- #}
-  {# Expect a list like ['Payments', 'Tier1']; we strip spaces to satisfy alnum rule #}
-  {% set groups = cookiecutter['_@cortex_inputs']['service_details'].get('groups', []) %}
-  {% if groups %}
+  {# -------- GROUPS -------- #}
+  {% set groups = cookiecutter.get('_@cortex_inputs', {}).get('service_details', {}).get('groups', []) %}
+  {% if groups and groups|length > 0 %}
   x-cortex-groups:
   {% for g in groups %}
-    - {{ g | replace(" ", "") }}
+    {% if g %}
+    - {{ (g|string) | replace(' ', '') }}
+    {% endif %}
   {% endfor %}
   {% endif %}
 
-  {# ----------------------- OWNERS ----------------------- #}
-  {# Supports both team (group) owners and email owners #}
-  {% set team_owner = cookiecutter['_@cortex_inputs']['owners'].get('team', {}) %}
-  {% set email_owners = cookiecutter['_@cortex_inputs']['owners'].get('emails', []) %}
-  {% if team_owner or email_owners %}
+  {# -------- OWNERS -------- #}
+  {% set owners_ctx = cookiecutter.get('_@cortex_inputs', {}).get('owners', {}) %}
+  {% set team_owner = owners_ctx.get('team', {}) %}
+  {% set email_owners = owners_ctx.get('emails', []) %}
+  {% if (team_owner and team_owner.get('slug')) or (email_owners and email_owners|length > 0) %}
   x-cortex-owners:
     {% if team_owner and team_owner.get('slug') %}
     - type: group
-      name: {{ team_owner['slug'] }}           # Team slug from Cortex
-      provider: CORTEX                         # Team defined in Cortex
-      {% if team_owner.get('description') %}description: {{ team_owner['description'] }}{% endif %}
+      name: {{ team_owner['slug'] }}
+      provider: CORTEX
+      {% if team_owner.get('description') %}
+      description: "{{ team_owner['description'] }}"
+      {% endif %}
     {% endif %}
-
     {% for e in email_owners %}
+      {% if e.get('email') %}
     - type: email
       email: {{ e['email'] }}
-      {% if e.get('description') %}description: {{ e['description'] }}{% endif %}
+      {% if e.get('description') %}description: "{{ e['description'] }}"{% endif %}
+      {% endif %}
     {% endfor %}
   {% endif %}
-
-  {# ---------------- OPTIONAL LINKS / EXTRAS -------------- #}
-  {% set links = cookiecutter['_@cortex_inputs']['service_details'].get('links', []) %}
-  {% if links %}
