@@ -4,10 +4,41 @@ info:
   description: {{ cookiecutter['_@cortex_inputs']['service_details']['description'] }}
   x-cortex-tag: {{ cookiecutter['_@cortex_inputs']['service_details']['tag'] }}
   x-cortex-type: service
+
   x-cortex-git:
     github:
       repository: {{ cookiecutter['_@cortex_inputs']['git']['repository']['org'] }}/{{ cookiecutter['_@cortex_inputs']['git']['repository']['repoName'] }}
-  x-cortex-static-analysis:
-    sonarqube:
-      alias: SonarCloud
-      project: {{ cookiecutter['_@cortex_inputs']['git']['repository']['org'] }}_{{ cookiecutter['_@cortex_inputs']['git']['repository']['repoName'] }}
+
+  {# ----------------------- GROUPS ----------------------- #}
+  {# Expect a list like ['Payments', 'Tier1']; we strip spaces to satisfy alnum rule #}
+  {% set groups = cookiecutter['_@cortex_inputs']['service_details'].get('groups', []) %}
+  {% if groups %}
+  x-cortex-groups:
+  {% for g in groups %}
+    - {{ g | replace(" ", "") }}
+  {% endfor %}
+  {% endif %}
+
+  {# ----------------------- OWNERS ----------------------- #}
+  {# Supports both team (group) owners and email owners #}
+  {% set team_owner = cookiecutter['_@cortex_inputs']['owners'].get('team', {}) %}
+  {% set email_owners = cookiecutter['_@cortex_inputs']['owners'].get('emails', []) %}
+  {% if team_owner or email_owners %}
+  x-cortex-owners:
+    {% if team_owner and team_owner.get('slug') %}
+    - type: group
+      name: {{ team_owner['slug'] }}           # Team slug from Cortex
+      provider: CORTEX                         # Team defined in Cortex
+      {% if team_owner.get('description') %}description: {{ team_owner['description'] }}{% endif %}
+    {% endif %}
+
+    {% for e in email_owners %}
+    - type: email
+      email: {{ e['email'] }}
+      {% if e.get('description') %}description: {{ e['description'] }}{% endif %}
+    {% endfor %}
+  {% endif %}
+
+  {# ---------------- OPTIONAL LINKS / EXTRAS -------------- #}
+  {% set links = cookiecutter['_@cortex_inputs']['service_details'].get('links', []) %}
+  {% if links %}
