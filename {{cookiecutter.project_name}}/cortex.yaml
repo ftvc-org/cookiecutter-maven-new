@@ -9,7 +9,8 @@ info:
     github:
       repository: {{ cookiecutter.get('_@cortex_inputs', {}).get('git', {}).get('repository', {}).get('org', 'org') }}/{{ cookiecutter.get('_@cortex_inputs', {}).get('git', {}).get('repository', {}).get('repoName', 'repo') }}
 
-  {# -------- GROUPS -------- #}
+  
+  {# ---- GROUPS ---- #}
   {% set groups = cookiecutter.get('_@cortex_inputs', {}).get('service_details', {}).get('groups', []) %}
   {% if groups and groups|length > 0 %}
   x-cortex-groups:
@@ -20,25 +21,3 @@ info:
   {% endfor %}
   {% endif %}
 
-  {# -------- OWNERS -------- #}
-  {% set owners_ctx = cookiecutter.get('_@cortex_inputs', {}).get('owners', {}) %}
-  {% set team_owner = owners_ctx.get('team', {}) %}
-  {% set email_owners = owners_ctx.get('emails', []) %}
-  {% if (team_owner and team_owner.get('slug')) or (email_owners and email_owners|length > 0) %}
-  x-cortex-owners:
-    {% if team_owner and team_owner.get('slug') %}
-    - type: group
-      name: {{ team_owner['slug'] }}
-      provider: CORTEX
-      {% if team_owner.get('description') %}
-      description: "{{ team_owner['description'] }}"
-      {% endif %}
-    {% endif %}
-    {% for e in email_owners %}
-      {% if e.get('email') %}
-    - type: email
-      email: {{ e['email'] }}
-      {% if e.get('description') %}description: "{{ e['description'] }}"{% endif %}
-      {% endif %}
-    {% endfor %}
-  {% endif %}
